@@ -27,10 +27,35 @@ object<-readRDS("HumanHippocampus_spatial_RNA_ATAC.rds")
 
 #### Processing 
 It is encouraged using fragment counts for enhancer-gene link analysis. Users can calling fragment counts with Signac. To use the peak calling functionality in Signac you will first need to install MACS2. This can be done using pip or conda, see the detail from [here](https://github.com/macs3-project/MACS). Using "which" to check the path `which macs2`.
+```{r}
+#| eval: false
+DefaultAssay(object)='ATAC'
+peaks <- CallPeaks(object, macs2.path = "~/anaconda3/bin/macs2")
+peaks <- keepStandardChromosomes(peaks, pruning.mode = "coarse")
+peaks <- subsetByOverlaps(x = peaks, ranges = blacklist_hg38_unified, invert = TRUE)
+macs2_counts <- FeatureMatrix(
+  fragments = Fragments(object),
+  features = peaks,
+  cells = colnames(object)
+)
+
+fragments="./GSM6206884_HumanBrain_50um_fragments.tsv.gz"
+library(EnsDb.Hsapiens.v86)
+library(AnnotationHub)
+library(ensembldb)
+library(AnnotationForge)
+annotations <- GetGRangesFromEnsDb(ensdb = EnsDb.Hsapiens.v86)
+seqlevels(annotations) <- paste0('chr', seqlevels(annotations))
+genome(annotations) <- "hg38"
+Annotation(object) <- annotations
 
 
-
-
+object[["peaks"]] <- CreateChromatinAssay(
+  counts = macs2_counts,
+  fragments = fragments,
+  annotation = annotations
+)
+```
 
 # Under Construction
 
