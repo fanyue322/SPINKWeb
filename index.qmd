@@ -1,0 +1,29 @@
+---
+title: "SPINK"
+author: "Fan Yue"
+date: "2026/04/02"
+---
+
+## 1. Overview
+SPINK is an R package for inferring **enhancer-gene regulatory interactions** from spatially resolved multi-ome data. Built on a **hierarchical linear spatial model (HLSM)** with thin-plate splines, SPINK explicitly models spatial dependence to deliver well-calibrated p-values and superior statistical power compared to existing methods.
+
+## 2. Installation
+TDEseq is implemented as an R package, which can be installed from GitHub.
+```
+library(devtools)
+install_github("fanyue322/SPINK")
+```
+## 3. Usage
+TDEseq starts with spatial multi-ome data with RNA assay and ATAC assay . 
+
+### Application on human hippocampus data
+We used a human hippocampus data as a main example which contains expression measurement of 29,293 genes and 42,944 peaks on 2500 spots. This dataset can be downloaded from their original study GSE205055. We also saved the processed data that we used in our examples in RData format, which can be downloaded from [here](https://zenodo.org/record/8276740/files/scRNA-seq_liver_embryo.rda). A detailed protocol for constructing a Spatial multiome object in the Seurat format is available [here](https://stuartlab.org/signac/articles/pbmc_multiomic)
+```{r}
+#| eval: false
+library(Seurat)
+library(Signac)
+object<-readRDS("HumanHippocampus_spatial_RNA_ATAC.rds")
+```
+
+#Under Construction
+
