@@ -25,5 +25,12 @@ library(Signac)
 object<-readRDS("HumanHippocampus_spatial_RNA_ATAC.rds")
 ```
 
-#Under Construction
+#### Processing 
+It is encouraged using fragment counts for enhancer-gene link analysis. Users can calling fragment counts with Signac. To use the peak calling functionality in Signac you will first need to install MACS2. This can be done using pip or conda, see the detail from [here](https://github.com/macs3-project/MACS). Using "which" to check the path `which macs2`.
+
+
+
+
+
+# Under Construction
 
