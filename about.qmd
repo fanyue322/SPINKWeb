@@ -2,4 +2,8 @@
 title: "About"
 ---
 
-About this site
+SPINK is an R package for inferring enhancer-gene regulatory interactions from spatially resolved multi-ome data. Built on a hierarchical linear spatial model (HLSM) with thin-plate splines, SPINK explicitly models spatial dependence to deliver well-calibrated p-values and superior statistical power compared to existing methods.
+
+## Our group
+
+ <https://sqsun.github.io/>.

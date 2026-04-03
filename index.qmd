@@ -8,7 +8,7 @@ date: "2026/04/02"
 SPINK is an R package for inferring **enhancer-gene regulatory interactions** from spatially resolved multi-ome data. Built on a **hierarchical linear spatial model (HLSM)** with thin-plate splines, SPINK explicitly models spatial dependence to deliver well-calibrated p-values and superior statistical power compared to existing methods.
 
 ## 2. Installation
-TDEseq is implemented as an R package, which can be installed from GitHub.
+SPINK is implemented as an R package, which can be installed from GitHub.
 ```
 library(devtools)
 install_github("fanyue322/SPINK")
@@ -17,7 +17,7 @@ install_github("fanyue322/SPINK")
 TDEseq starts with spatial multi-ome data with RNA assay and ATAC assay . 
 
 ### Application on human hippocampus data
-We used a human hippocampus data as a main example which contains expression measurement of 29,293 genes and 42,944 peaks on 2500 spots. This dataset can be downloaded from their original study GSE205055. We also saved the processed data that we used in our examples in RData format, which can be downloaded from [here](https://zenodo.org/record/8276740/files/scRNA-seq_liver_embryo.rda). A detailed protocol for constructing a Spatial multiome object in the Seurat format is available [here](https://stuartlab.org/signac/articles/pbmc_multiomic)
+We used a human hippocampus data as a main example which contains expression measurement of 29,293 genes and 42,944 peaks on 2500 spots. This dataset can be downloaded from their original study GSE205055. We also saved the processed data that we used in our examples in RData format, which can be downloaded from [here](https://zenodo.org/records/19385278). A detailed protocol for constructing a Spatial multiome object in the Seurat format is available [here](https://stuartlab.org/signac/articles/pbmc_multiomic)
 ```{r}
 #| eval: false
 library(Seurat)
@@ -57,5 +57,80 @@ object[["peaks"]] <- CreateChromatinAssay(
 )
 ```
 
-# Under Construction
+#### Run SPINK analysis
+```{r}
+#| eval: false
+library(SPINK)
+object <- spink_preprocess(
+  object = object,
+  group.by = "domain",    # metadata column with domain labels
+  domain = "R3",          # target domain (CA region)  
+  refGenome = "hg38",     # or "hg19", "mm10"
+  distance = 5e+05,       # search window for cis-regulatory elements (bp)      
+  num.core = 2            # parallel cores for TPS fitting
+)
+object <- spink_analysis(
+  object = object,
+  link.gene.thr = 0.1,        # gene-level significance threshold 
+  n.permute = 1000            # permutations for empirical p-values
+)
+```
+The peak-gene association results can be accessed as a data frame in the output object via `results <- GetLinkResult(obj, domain = "R3")`. 
+
+### Parameter settings
+`spink_preprocess()`prepares spatial multi-ome data for enhancer-gene regulatory inference by performing spatial decorrelation, quality control, and background peak generation. Users can customize the preprocessing pipeline through the following parameters:
+```{r}
+#| eval: false
+object <- spink_preprocess(
+  object = object,
+  group.by = "domain",
+  domain = "R3",
+  refGenome = "hg38",
+  distance = 5e5,
+  rna.assay = "Spatial",
+  peak.assay = "peaks",
+  min.pct.rna = 0.1,
+  min.pct.peak = 0.05,
+  num.core = 10
+)
+
+```
+1. Define target spatial domain by setting `group.by` and `domain`. The function subsets spots belonging to the specified spatial domain (e.g., "R3" for hippocampal CA region) for downstream analysis. Only spots with matching labels in `object@meta.data[, group.by]` are retained.
+2. Specify reference genome by setting `refGenome`. This determines gene annotations, chromosome sizes, and GC content calculation for peak matching. Options include "hg38" (human GRCh38), "hg19" (human GRCh37), or "mm10" (mouse GRCm38). SPINK automatically installs and loads the corresponding Bioconductor annotation packages (EnsDb.Hsapiens.v86, EnsDb.Hsapiens.v75, or EnsDb.Mmusculus.v79) and BSgenome references.
+3. Construct cis-regulatory pairs by setting `distance`. Peaks within distance base pairs (default: 500kb) upstream or downstream of gene transcription start sites are considered candidate regulatory elements. Larger windows capture more distal enhancers but increase computational burden.
+4. Specify RNA assay name by setting `rna.assay`. This should match the name of the gene expression assay in the Seurat object (default: "Spatial"). 
+5. Specify ATAC assay name by setting `peak.assay`. This should match the name of the chromatin accessibility assay in the Seurat object (default: "peaks"). 
+6. Filter low-quality genes by setting `min.pct.rna`. Genes expressed in fewer than `min.pct.rna` fraction of spots (default: 10%) are removed. Here, genes with more than 90% zero counts across the domain are filtered out.
+7. Filter low-quality peaks by setting `min.pct.peak`. Peaks accessible in fewer than `min.pct.peak` fraction of spots (default: 5%) are removed. This eliminates rare accessibility events that may represent technical noise.
+8. Accelerate computation by setting `num.core`. Parallel processing is applied to spatial decorrelation (TPS fitting for all genes and peaks) and permutation peak generation. Default is 10 cores; set to 1 for sequential processing. Memory usage scales linearly with core count.
+
+`spink_analysis()` performs statistical inference to identify significant enhancer-gene regulatory links through constrained regression and permutation-based hypothesis testing:
+```{r}
+#| eval: false
+object <- spink_analysis(
+  object = object,
+  gene.thr = 0.1,
+  n.permute = 1000
+)
+```
+1. Threshold significant genes by setting `gene.thr`. Only genes with permutation-adjusted p-values (p.adj.gene) below this threshold (default: 0.1) proceed to peak-level testing. This filters genes with no significant overall regulatory signal before fine-mapping specific enhancers.
+2. Calculate empirical gene-level p-values by setting `n.permute`. For each gene, the observed likelihood ratio test statistic is compared against a null distribution generated by n.permute permutations (default: 1000) of matched background peaks. Higher values yield more precise p-value estimates but increase runtime. The default provides p-value resolution of 0.001; consider n.permute = 10000 for publication-grade precision.
+
+### Association of enhancer and gene 
+The exploration of SPINK data analysis consists of identifying enhancer-gene regulatory interactions within specific spatial domains and characterizing their statistical significance and genomic context. This can be interpreted as testing whether chromatin accessibility of cis-regulatory elements significantly predicts gene expression after accounting for spatial autocorrelation.
+
+| gene | npeaks | pval.gene | p.adj.gene | peak | zscore.peak | pval.peak |
+|:-----|-------:|----------:|-----------:|:-----|------------:|----------:|
+| ELP3 | 15 | 2.34e-05 | 0.002 | chr8-27608683-27609101 | 4.21 | 1.28e-05 |
+| ASH1L | 23 | 1.15e-04 | 0.008 | chr1-155135500-155135950 | 3.89 | 4.17e-05 |
+| MCL1 | 8 | 3.45e-04 | 0.015 | chr1-150547800-150548200 | 3.56 | 2.31e-04 |
+| LPCAT1 | 12 | 8.67e-04 | 0.032 | chr5-122780000-122780400 | 3.12 | 8.45e-04 |
+| MAX | 31 | 1.23e-03 | 0.041 | chr14-65002000-65002500 | 2.98 | 1.56e-03 |
+
+Here, `npeaks` is the number of candidate cis-regulatory peaks tested. `pval.gene` is the raw gene-level p-value from the constrained regression Beta-mixture likelihood ratio test, and `p.adj.gene` is the permutation-adjusted empirical p-value.
+
+`peak` is the genomic coordinate of the significant regulatory element in chr-start-end format. `zscore.peak` is the correlation z-score comparing the target peak against 200 matched background peaks (matched on GC content, accessibility, and sequence length). `pval.peak` is the peak-level permutation-adjusted empirical p-value.
+
+
+
 

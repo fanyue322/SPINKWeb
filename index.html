@@ -163,8 +163,9 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
   <li><a href="#usage" id="toc-usage" class="nav-link" data-scroll-target="#usage">3. Usage</a>
   <ul class="collapse">
   <li><a href="#application-on-human-hippocampus-data" id="toc-application-on-human-hippocampus-data" class="nav-link" data-scroll-target="#application-on-human-hippocampus-data">Application on human hippocampus data</a></li>
+  <li><a href="#parameter-settings" id="toc-parameter-settings" class="nav-link" data-scroll-target="#parameter-settings">Parameter settings</a></li>
+  <li><a href="#association-of-enhancer-and-gene" id="toc-association-of-enhancer-and-gene" class="nav-link" data-scroll-target="#association-of-enhancer-and-gene">Association of enhancer and gene</a></li>
   </ul></li>
-  <li><a href="#under-construction" id="toc-under-construction" class="nav-link" data-scroll-target="#under-construction">Under Construction</a></li>
   </ul>
 </nav>
     </div>
@@ -205,7 +206,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 </section>
 <section id="installation" class="level2">
 <h2 class="anchored" data-anchor-id="installation">2. Installation</h2>
-<p>TDEseq is implemented as an R package, which can be installed from GitHub.</p>
+<p>SPINK is implemented as an R package, which can be installed from GitHub.</p>
 <pre><code>library(devtools)
 install_github("fanyue322/SPINK")</code></pre>
 </section>
@@ -214,7 +215,7 @@ install_github("fanyue322/SPINK")</code></pre>
 <p>TDEseq starts with spatial multi-ome data with RNA assay and ATAC assay .</p>
 <section id="application-on-human-hippocampus-data" class="level3">
 <h3 class="anchored" data-anchor-id="application-on-human-hippocampus-data">Application on human hippocampus data</h3>
-<p>We used a human hippocampus data as a main example which contains expression measurement of 29,293 genes and 42,944 peaks on 2500 spots. This dataset can be downloaded from their original study GSE205055. We also saved the processed data that we used in our examples in RData format, which can be downloaded from <a href="https://zenodo.org/record/8276740/files/scRNA-seq_liver_embryo.rda">here</a>. A detailed protocol for constructing a Spatial multiome object in the Seurat format is available <a href="https://stuartlab.org/signac/articles/pbmc_multiomic">here</a></p>
+<p>We used a human hippocampus data as a main example which contains expression measurement of 29,293 genes and 42,944 peaks on 2500 spots. This dataset can be downloaded from their original study GSE205055. We also saved the processed data that we used in our examples in RData format, which can be downloaded from <a href="https://zenodo.org/records/19385278">here</a>. A detailed protocol for constructing a Spatial multiome object in the Seurat format is available <a href="https://stuartlab.org/signac/articles/pbmc_multiomic">here</a></p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(Seurat)</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(Signac)</span>
@@ -252,12 +253,144 @@ install_github("fanyue322/SPINK")</code></pre>
 <span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
+<section id="run-spink-analysis" class="level4">
+<h4 class="anchored" data-anchor-id="run-spink-analysis">Run SPINK analysis</h4>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(SPINK)</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>object <span class="ot">&lt;-</span> <span class="fu">spink_preprocess</span>(</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">object =</span> object,</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">group.by =</span> <span class="st">"domain"</span>,    <span class="co"># metadata column with domain labels</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">domain =</span> <span class="st">"R3"</span>,          <span class="co"># target domain (CA region)  </span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">refGenome =</span> <span class="st">"hg38"</span>,     <span class="co"># or "hg19", "mm10"</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">distance =</span> <span class="fl">5e+05</span>,       <span class="co"># search window for cis-regulatory elements (bp)      </span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">num.core =</span> <span class="dv">2</span>            <span class="co"># parallel cores for TPS fitting</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>object <span class="ot">&lt;-</span> <span class="fu">spink_analysis</span>(</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">object =</span> object,</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">link.gene.thr =</span> <span class="fl">0.1</span>,        <span class="co"># gene-level significance threshold </span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">n.permute =</span> <span class="dv">1000</span>            <span class="co"># permutations for empirical p-values</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>The peak-gene association results can be accessed as a data frame in the output object via <code>results &lt;- GetLinkResult(obj, domain = "R3")</code>.</p>
 </section>
 </section>
-<section id="under-construction" class="level1">
-<h1>Under Construction</h1>
+<section id="parameter-settings" class="level3">
+<h3 class="anchored" data-anchor-id="parameter-settings">Parameter settings</h3>
+<p><code>spink_preprocess()</code>prepares spatial multi-ome data for enhancer-gene regulatory inference by performing spatial decorrelation, quality control, and background peak generation. Users can customize the preprocessing pipeline through the following parameters:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>object <span class="ot">&lt;-</span> <span class="fu">spink_preprocess</span>(</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">object =</span> object,</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">group.by =</span> <span class="st">"domain"</span>,</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">domain =</span> <span class="st">"R3"</span>,</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">refGenome =</span> <span class="st">"hg38"</span>,</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">distance =</span> <span class="fl">5e5</span>,</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">rna.assay =</span> <span class="st">"Spatial"</span>,</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">peak.assay =</span> <span class="st">"peaks"</span>,</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">min.pct.rna =</span> <span class="fl">0.1</span>,</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">min.pct.peak =</span> <span class="fl">0.05</span>,</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">num.core =</span> <span class="dv">10</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<ol type="1">
+<li>Define target spatial domain by setting <code>group.by</code> and <code>domain</code>. The function subsets spots belonging to the specified spatial domain (e.g., “R3” for hippocampal CA region) for downstream analysis. Only spots with matching labels in <code>object@meta.data[, group.by]</code> are retained.</li>
+<li>Specify reference genome by setting <code>refGenome</code>. This determines gene annotations, chromosome sizes, and GC content calculation for peak matching. Options include “hg38” (human GRCh38), “hg19” (human GRCh37), or “mm10” (mouse GRCm38). SPINK automatically installs and loads the corresponding Bioconductor annotation packages (EnsDb.Hsapiens.v86, EnsDb.Hsapiens.v75, or EnsDb.Mmusculus.v79) and BSgenome references.</li>
+<li>Construct cis-regulatory pairs by setting <code>distance</code>. Peaks within distance base pairs (default: 500kb) upstream or downstream of gene transcription start sites are considered candidate regulatory elements. Larger windows capture more distal enhancers but increase computational burden.</li>
+<li>Specify RNA assay name by setting <code>rna.assay</code>. This should match the name of the gene expression assay in the Seurat object (default: “Spatial”).</li>
+<li>Specify ATAC assay name by setting <code>peak.assay</code>. This should match the name of the chromatin accessibility assay in the Seurat object (default: “peaks”).</li>
+<li>Filter low-quality genes by setting <code>min.pct.rna</code>. Genes expressed in fewer than <code>min.pct.rna</code> fraction of spots (default: 10%) are removed. Here, genes with more than 90% zero counts across the domain are filtered out.</li>
+<li>Filter low-quality peaks by setting <code>min.pct.peak</code>. Peaks accessible in fewer than <code>min.pct.peak</code> fraction of spots (default: 5%) are removed. This eliminates rare accessibility events that may represent technical noise.</li>
+<li>Accelerate computation by setting <code>num.core</code>. Parallel processing is applied to spatial decorrelation (TPS fitting for all genes and peaks) and permutation peak generation. Default is 10 cores; set to 1 for sequential processing. Memory usage scales linearly with core count.</li>
+</ol>
+<p><code>spink_analysis()</code> performs statistical inference to identify significant enhancer-gene regulatory links through constrained regression and permutation-based hypothesis testing:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>object <span class="ot">&lt;-</span> <span class="fu">spink_analysis</span>(</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">object =</span> object,</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">gene.thr =</span> <span class="fl">0.1</span>,</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">n.permute =</span> <span class="dv">1000</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<ol type="1">
+<li>Threshold significant genes by setting <code>gene.thr</code>. Only genes with permutation-adjusted p-values (p.adj.gene) below this threshold (default: 0.1) proceed to peak-level testing. This filters genes with no significant overall regulatory signal before fine-mapping specific enhancers.</li>
+<li>Calculate empirical gene-level p-values by setting <code>n.permute</code>. For each gene, the observed likelihood ratio test statistic is compared against a null distribution generated by n.permute permutations (default: 1000) of matched background peaks. Higher values yield more precise p-value estimates but increase runtime. The default provides p-value resolution of 0.001; consider n.permute = 10000 for publication-grade precision.</li>
+</ol>
+</section>
+<section id="association-of-enhancer-and-gene" class="level3">
+<h3 class="anchored" data-anchor-id="association-of-enhancer-and-gene">Association of enhancer and gene</h3>
+<p>The exploration of SPINK data analysis consists of identifying enhancer-gene regulatory interactions within specific spatial domains and characterizing their statistical significance and genomic context. This can be interpreted as testing whether chromatin accessibility of cis-regulatory elements significantly predicts gene expression after accounting for spatial autocorrelation.</p>
+<table class="table">
+<colgroup>
+<col style="width: 8%">
+<col style="width: 11%">
+<col style="width: 16%">
+<col style="width: 17%">
+<col style="width: 8%">
+<col style="width: 19%">
+<col style="width: 16%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">gene</th>
+<th style="text-align: right;">npeaks</th>
+<th style="text-align: right;">pval.gene</th>
+<th style="text-align: right;">p.adj.gene</th>
+<th style="text-align: left;">peak</th>
+<th style="text-align: right;">zscore.peak</th>
+<th style="text-align: right;">pval.peak</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">ELP3</td>
+<td style="text-align: right;">15</td>
+<td style="text-align: right;">2.34e-05</td>
+<td style="text-align: right;">0.002</td>
+<td style="text-align: left;">chr8-27608683-27609101</td>
+<td style="text-align: right;">4.21</td>
+<td style="text-align: right;">1.28e-05</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">ASH1L</td>
+<td style="text-align: right;">23</td>
+<td style="text-align: right;">1.15e-04</td>
+<td style="text-align: right;">0.008</td>
+<td style="text-align: left;">chr1-155135500-155135950</td>
+<td style="text-align: right;">3.89</td>
+<td style="text-align: right;">4.17e-05</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">MCL1</td>
+<td style="text-align: right;">8</td>
+<td style="text-align: right;">3.45e-04</td>
+<td style="text-align: right;">0.015</td>
+<td style="text-align: left;">chr1-150547800-150548200</td>
+<td style="text-align: right;">3.56</td>
+<td style="text-align: right;">2.31e-04</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">LPCAT1</td>
+<td style="text-align: right;">12</td>
+<td style="text-align: right;">8.67e-04</td>
+<td style="text-align: right;">0.032</td>
+<td style="text-align: left;">chr5-122780000-122780400</td>
+<td style="text-align: right;">3.12</td>
+<td style="text-align: right;">8.45e-04</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">MAX</td>
+<td style="text-align: right;">31</td>
+<td style="text-align: right;">1.23e-03</td>
+<td style="text-align: right;">0.041</td>
+<td style="text-align: left;">chr14-65002000-65002500</td>
+<td style="text-align: right;">2.98</td>
+<td style="text-align: right;">1.56e-03</td>
+</tr>
+</tbody>
+</table>
+<p>Here, <code>npeaks</code> is the number of candidate cis-regulatory peaks tested. <code>pval.gene</code> is the raw gene-level p-value from the constrained regression Beta-mixture likelihood ratio test, and <code>p.adj.gene</code> is the permutation-adjusted empirical p-value.</p>
+<p><code>peak</code> is the genomic coordinate of the significant regulatory element in chr-start-end format. <code>zscore.peak</code> is the correlation z-score comparing the target peak against 200 matched background peaks (matched on GC content, accessibility, and sequence length). <code>pval.peak</code> is the peak-level permutation-adjusted empirical p-value.</p>
 
 
+</section>
 </section>
 
 </main> <!-- /main -->
